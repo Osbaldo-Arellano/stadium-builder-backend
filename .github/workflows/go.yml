@@ -17,10 +17,19 @@ jobs:
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
           POSTGRES_DB: test_db
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping || exit 1"
+          --health-interval=5s
+          --health-retries=5
+          --health-timeout=2s
 
     env:
-      # Hard coding this since we're using a temporary DB instance (postgres service)
       TEST_DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+      REDIS_URL: redis://localhost:6379
       GO_ENV: test
 
     steps:
@@ -31,6 +40,14 @@ jobs:
         run: |
           until pg_isready -h localhost -p 5432; do
             echo "Waiting for database...";
+            sleep 1;
+          done
+        shell: bash
+
+      - name: Wait for Redis
+        run: |
+          until redis-cli -h localhost ping; do
+            echo "Waiting for Redis...";
             sleep 1;
           done
         shell: bash

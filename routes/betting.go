@@ -2,6 +2,7 @@ package routes
 
 import (
 	"net/http"
+	"os"
 	"stadium-builder-backend/services"
 
 	"github.com/gin-gonic/gin"
@@ -9,15 +10,46 @@ import (
 
 func BettingRoutes(router *gin.Engine) {
 	router.GET("/betting", func(c *gin.Context) {
-		// Fetch betting data
-		apiURL := "https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds?regions=us&oddsFormat=american&apiKey="
-		games, err := services.FetchBettingData(apiURL)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// Validate API URL
+		apiURL := os.Getenv("ODDS_API_URL")
+		if apiURL == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Betting API URL not configured"})
 			return
 		}
 
-		// Send the games data to the client
-		c.JSON(http.StatusOK, gin.H{"Games": games})
+		// Attempt to retrieve data from Redis cache
+		cachedData, err := services.GetCachedBettingData()
+		if err == nil && cachedData != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"Games": cachedData,
+				"Source": "cache",
+			})
+			return
+		}
+
+		// Fetch betting data from the external API
+		games, err := services.FetchBettingData(apiURL, false)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch betting data from API"})
+			return
+		}
+
+		// Cache the fetched data in Redis
+		err = services.CacheBettingData(games)
+		if err != nil {
+			// Log the error but still return the fetched data to the client
+			c.JSON(http.StatusOK, gin.H{
+				"Games":  games,
+				"Source": "api",
+				"Warning": "Data fetched but caching failed",
+			})
+			return
+		}
+
+		// Return the fetched data
+		c.JSON(http.StatusOK, gin.H{
+			"Games":  games,
+			"Source": "api",
+		})
 	})
 }
