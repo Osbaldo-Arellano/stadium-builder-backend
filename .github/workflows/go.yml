@@ -19,6 +19,8 @@ jobs:
           POSTGRES_DB: stadium_builder_test
 
     env:
+      # Hard coding these since the DB is a temporary service that gets torn down after the
+      # pipeline is done.
       POSTGRES_USER: stadium_user
       POSTGRES_PASSWORD: secure_password
       POSTGRES_DB: stadium_builder_test
@@ -41,4 +43,4 @@ jobs:
         run: echo "TEST_DATABASE_URL=$TEST_DATABASE_URL"
 
       - name: Run Tests
-        run: go test ./unit_test/... -v
+        run: go test ./unit_tests/... -v
