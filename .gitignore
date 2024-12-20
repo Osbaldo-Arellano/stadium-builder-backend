@@ -34,9 +34,6 @@ coverage.out
 dist/
 tmp/
 
-# Go modules
-go.sum
-
 # Compiled objects
 *.o
 *.a
