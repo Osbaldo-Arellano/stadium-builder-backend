@@ -35,4 +35,4 @@ jobs:
         shell: bash
 
       - name: Run Tests
-        run: go test ./unit_test/... -v
+        run: go test ./unit_tests/... -v
