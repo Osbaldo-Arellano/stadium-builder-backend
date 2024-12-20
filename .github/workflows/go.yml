@@ -19,6 +19,7 @@ jobs:
           POSTGRES_DB: test_db
 
     env:
+      # Hard coding this since we're using a temporary DB instance (postgres service)
       TEST_DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
       GO_ENV: test
 
