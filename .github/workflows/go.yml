@@ -19,19 +19,19 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
 
     env:
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       GO_ENV: test
 
     steps:
-      # Step 1: Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Construct TEST_DATABASE_URL
       - name: Construct TEST_DATABASE_URL
         run: |
           echo "TEST_DATABASE_URL=postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}" >> $GITHUB_ENV
 
-      # Step 3: Wait for Database
       - name: Wait for Database
         run: |
           until pg_isready -h localhost -p 5432; do
@@ -40,6 +40,9 @@ jobs:
           done
         shell: bash
 
-      # Step 4: Run Tests
+      - name: Debug TEST_DATABASE_URL
+        run: |
+          echo "TEST_DATABASE_URL=$TEST_DATABASE_URL"
+
       - name: Run Tests
         run: go test ./unit_test/... -v
