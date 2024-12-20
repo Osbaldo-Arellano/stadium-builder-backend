@@ -11,9 +11,11 @@ import (
 )
 
 func TestConnectDatabase(t *testing.T) {
-	// Load environment variables from .env file
-	err := godotenv.Load("../.env")
-	assert.NoError(t, err, "Failed to load .env file")
+	// Only load .env locally; skip in CI/CD
+	if os.Getenv("CI") == "" { // `CI` is usually set by default in CI/CD environments
+		err := godotenv.Load("../.env")
+		assert.NoError(t, err, "Failed to load .env file")
+	}
 
 	// Ensure TEST_DATABASE_URL is set
 	dsn := os.Getenv("TEST_DATABASE_URL")
@@ -28,3 +30,4 @@ func TestConnectDatabase(t *testing.T) {
 	assert.NoError(t, err, "Database connection should succeed")
 	assert.NotNil(t, db, "DB instance should not be nil")
 }
+
